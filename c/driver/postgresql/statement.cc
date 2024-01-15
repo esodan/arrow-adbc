@@ -39,7 +39,7 @@
 #include "common/utils.h"
 #include "connection.h"
 #include "error.h"
-#include "postgres_copy_reader.h"
+#include "copy/writer.h"
 #include "postgres_type.h"
 #include "postgres_util.h"
 #include "result_helper.h"
@@ -213,6 +213,11 @@ struct BindStream {
         case ArrowType::NANOARROW_TYPE_INTERVAL_MONTH_DAY_NANO:
           type_id = PostgresTypeId::kInterval;
           param_lengths[i] = 16;
+          break;
+        case ArrowType::NANOARROW_TYPE_DECIMAL128:
+        case ArrowType::NANOARROW_TYPE_DECIMAL256:
+          type_id = PostgresTypeId::kNumeric;
+          param_lengths[i] = 0;
           break;
         case ArrowType::NANOARROW_TYPE_DICTIONARY: {
           struct ArrowSchemaView value_view;
@@ -1061,6 +1066,10 @@ AdbcStatusCode PostgresStatement::CreateBulkTable(
       case ArrowType::NANOARROW_TYPE_DURATION:
       case ArrowType::NANOARROW_TYPE_INTERVAL_MONTH_DAY_NANO:
         create += " INTERVAL";
+        break;
+      case ArrowType::NANOARROW_TYPE_DECIMAL128:
+      case ArrowType::NANOARROW_TYPE_DECIMAL256:
+        create += " DECIMAL";
         break;
       case ArrowType::NANOARROW_TYPE_DICTIONARY: {
         struct ArrowSchemaView value_view;
